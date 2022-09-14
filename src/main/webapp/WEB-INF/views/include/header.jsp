@@ -106,7 +106,7 @@
                         <li>카테고리1</li>
                         <li>카테고리2</li>
                         <li>카테고리3</li>
-                        <li>카테고리4</li>
+                        <li>카테고리4-1</li>
                         <li><a href="/market/board/notice/list">공지사항</a></li>
                         <li><a href="/market/board/free/list">자유게시판</a></li>
                         <!--<li class="dropdown"><a href="#">Shop<i class="fa fa-angle-down"></i></a>
