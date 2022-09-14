@@ -1,12 +1,12 @@
 package com.example.marketproject.common;
 
-import java.io.File;
-import java.io.UnsupportedEncodingException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class Util {
 	
@@ -88,8 +88,8 @@ public class Util {
 	 * @return
 	 */
 	public static String makeUniqueFileName(String fileName)
-    {   
-        String ext = fileName.substring(fileName.lastIndexOf("."));
+    {
+		String ext = fileName.substring(fileName.lastIndexOf("."));
         
         String name = UUID.randomUUID().toString();
 
@@ -146,6 +146,44 @@ public class Util {
 		sb = sb.replace(0, 1, "?");
 		
 		return sb.toString();
+	}
+
+	public static String pathVariable(HttpServletRequest req, int pathKey) {
+		List<String> pathList = Arrays.asList(req.getServletPath().split("/"));
+
+		return pathList.get(pathKey);
+	}
+
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+
+	public static String readBody(HttpServletRequest request) throws IOException {
+		BufferedReader input = new BufferedReader(new InputStreamReader(request.getInputStream()));
+		StringBuilder builder = new StringBuilder();
+		String buffer;
+		while ((buffer = input.readLine()) != null) {
+			if (builder.length() > 0) {
+				builder.append("\n");
+			}
+			builder.append(buffer);
+		}
+		return builder.toString();
+	}
+
+	public static void ajaxJsonSet(HttpServletRequest req, HttpServletResponse resp, String charset) throws IOException {
+		resp.setContentType("application/json; charset=" + charset);
+		resp.setCharacterEncoding(charset);
+		req.setCharacterEncoding(charset);
+	}
+
+	public static String addSlashes(String s) {
+		if (s == null)
+			return "";
+		s = s.replaceAll("\\\\", "\\\\\\\\");
+		s = s.replaceAll("\\n", "\\\\n");
+		s = s.replaceAll("\\r", "\\\\r");
+		s = s.replaceAll("\\00", "\\\\0");
+		s = s.replaceAll("'", "\\\\'");
+		return s;
 	}
 
 }

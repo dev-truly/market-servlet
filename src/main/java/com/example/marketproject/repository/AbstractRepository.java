@@ -1,5 +1,6 @@
 package com.example.marketproject.repository;
 
+import com.example.marketproject.common.Util;
 import com.example.marketproject.config.Database;
 
 import java.lang.reflect.Field;
@@ -30,6 +31,7 @@ public abstract class AbstractRepository<T> {
 	protected final String updateSql = "Update %s Set %s Where %s";
 	protected final String deleteSql = "Delete From %s Where %s = %s";
 	protected final String selectSql = "select %s From %s %s";
+	protected final String countSql = "select count(*) cnt From %s";
 	
 	public AbstractRepository(Class<T> vo) {
 		AbstractRepository.db = new Database();
@@ -57,6 +59,7 @@ public abstract class AbstractRepository<T> {
 	
 	public static void setTransaction() {
 		try {
+
 			AbstractRepository.db.conn.setAutoCommit(false);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -96,6 +99,9 @@ public abstract class AbstractRepository<T> {
 			
 			Map<String, String> insertValues = setOneValues(fieldValue);
 			result = AbstractRepository.db.update(String.format(insertSql, tableName, insertValues.get("fields"), insertValues.get("values")));
+			if (result > 0) {
+				result = AbstractRepository.db.lastInsertId;
+			}
 		} catch (NoSuchMethodException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -176,7 +182,7 @@ public abstract class AbstractRepository<T> {
 	 */
 	public int deleteById(Long no) {
 		int result = 0;
-		
+
 		try {
 			result = AbstractRepository.db.update(String.format(deleteSql, tableName, convertCamelToSnake(indexName), no));
 		} catch (SQLException e) {
@@ -304,7 +310,7 @@ public abstract class AbstractRepository<T> {
 	 */
 	public int updateByQuery(String query) {
 		int result = 0;
-		
+		//System.out.println(query);
 		try {
 			result = AbstractRepository.db.update(query);
 		} catch (SQLException e) {
@@ -320,7 +326,7 @@ public abstract class AbstractRepository<T> {
 	 */
 	public List<T> selectByQuery(String query) {
 		List<T> returnData = new ArrayList<>();
-		
+		//System.out.println(query);
 		try {
 			rs = db.select(query);
 			while (rs.next()) {
@@ -337,6 +343,33 @@ public abstract class AbstractRepository<T> {
 		
 		return returnData;
 	}
+
+	public int count() {
+		int result = 0;
+		try {
+			rs = db.select(String.format(countSql, tableName));
+			if (rs.next()) {
+				result = rs.getInt("cnt");
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		return result;
+	}
+
+	public int queryCount(String query) {
+		int result = 0;
+		//System.out.println(query);
+		try {
+			rs = db.select(query);
+			if (rs.next()) {
+				result = rs.getInt(1);
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		return result;
+	}
 	
 	public Object getValue(String fieldName, T vo) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Method method = this.vo.getMethod("get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1));
@@ -350,7 +383,7 @@ public abstract class AbstractRepository<T> {
 		for (int i = 1; i <= rsmd.getColumnCount(); i++) {
 			columnList.add(rsmd.getColumnName(i));
 		}
-		
+
 		T vo = this.vo.newInstance();
 		
 		for (Method m : this.vo.getMethods()) {
@@ -359,16 +392,18 @@ public abstract class AbstractRepository<T> {
 				String camelCase = (fieldName.substring(0, 1).toLowerCase() + fieldName.substring(1));
 				String underScore = convertCamelToSnake(camelCase);
 				Class<?>[] params = m.getParameterTypes();
-				if (params[0].equals(String.class) && columnList.indexOf(underScore) > -1) {
+
+				if (columnList.indexOf(underScore) < 0) continue;
+				if (params[0].equals(String.class)) {
 					m.invoke(vo, rs.getString(underScore));
 				}
-				else if ((params[0].equals(int.class) || params[0].equals(Integer.class)) && columnList.indexOf(underScore) > -1) {
+				else if ((params[0].equals(int.class) || params[0].equals(Integer.class))) {
 					m.invoke(vo, rs.getInt(underScore));
 				}
-				else if (params[0].equals(Long.class) && columnList.indexOf(underScore) > -1) {
+				else if (params[0].equals(Long.class)) {
 					m.invoke(vo, rs.getLong(underScore));
 				}
-				else if ((params[0].equals(Date.class) || params[0].equals(java.sql.Date.class)) && columnList.indexOf(underScore) > -1) {
+				else if ((params[0].equals(Date.class) || params[0].equals(java.sql.Date.class))) {
 					m.invoke(vo, rs.getTimestamp(underScore));
 				}
 			}
@@ -385,7 +420,13 @@ public abstract class AbstractRepository<T> {
 		List<String> arrayValues = new ArrayList<>();
 		for (String key: keys) {
 			if (data.get(key) != null) {
-				arrayKeys.add(key);
+				if ((key.equals("delete") || key.equals("order") || key.equals("select") || key.equals("update"))) {
+					arrayKeys.add("`" + key + "`");
+				}
+				else {
+					arrayKeys.add(key);
+				}
+
 				if (data.get(key) instanceof String) {
 					arrayValues.add(String.format("'%s'", data.get(key)));
 				}
@@ -410,14 +451,21 @@ public abstract class AbstractRepository<T> {
 		List<String> arrayValues = new ArrayList<>();
 		for (String key: keys) {
 			if (data.get(key) != null) {
-				if (data.get(key) instanceof String) {
-					arrayValues.add(String.format("%s = '%s'", key, data.get(key)));
-				}
-				else if (data.get(key) instanceof Date || data.get(key) instanceof LocalDateTime) {
-					arrayValues.add(String.format("%s = '%s'", key, SDF.format(data.get(key))));
+				String fieldRealName = null;
+				if ((key.equals("delete") || key.equals("order") || key.equals("select") || key.equals("update"))) {
+					fieldRealName = "`" + key + "`";
 				}
 				else {
-					arrayValues.add(String.format("%s = %s", key, data.get(key)));
+					fieldRealName = key;
+				}
+				if (data.get(key) instanceof String) {
+					arrayValues.add(String.format("%s = '%s'", fieldRealName, data.get(key)));
+				}
+				else if (data.get(key) instanceof Date || data.get(key) instanceof LocalDateTime) {
+					arrayValues.add(String.format("%s = '%s'", fieldRealName, SDF.format(data.get(key))));
+				}
+				else {
+					arrayValues.add(String.format("%s = %s", fieldRealName, data.get(key)));
 				}
 			}
 		}

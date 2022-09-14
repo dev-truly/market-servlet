@@ -55,3 +55,17 @@ const includeHtml = (element, link) => {
         xhttp.send();
     }
 }
+
+const setDateFormat = (date) => {
+    let dateFormat = new Date(date);
+    return `${dateFormat.getFullYear()}.${(dateFormat.getMonth() + 1).toString().padStart(2, '0')}.${dateFormat.getDate().toString().padStart(2, '0')}`;
+}
+
+const setFullDateFormat = (date) => {
+    let dateFormat = new Date(date);
+    return `${dateFormat.getFullYear()}-${(dateFormat.getMonth() + 1).toString().padStart(2, '0')}-${dateFormat.getDate().toString().padStart(2, '0')} ${dateFormat.getHours().toString().padStart(2, '0')}:${dateFormat.getMinutes().toString().padStart(2, '0')}:${dateFormat.getSeconds().toString().padStart(2, '0')}`;
+}
+
+const nl2br = (str) => {
+    return str.replace(/\n/g, "<br />");
+}

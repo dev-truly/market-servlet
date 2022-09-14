@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="">
 	<meta name="author" content="">
-	<title>Login | E-Shopper</title>
+	<title>로그인 | E-Shopper</title>
 	<link href="/market/css/bootstrap.min.css" rel="stylesheet">
 	<link href="/market/css/font-awesome.min.css" rel="stylesheet">
 	<link href="/market/css/prettyPhoto.css" rel="stylesheet">
@@ -19,6 +19,7 @@
 	<script src="/market/js/respond.min.js"></script>
 	<![endif]-->
 	<link rel="shortcut icon" href="/market/images/ico/favicon.ico">
+	<link rel="icon" href="/market/images/ico/favicon.ico" type="image/x-icon">
 	<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/market/images/ico/apple-touch-icon-144-precomposed.png">
 	<link rel="apple-touch-icon-precomposed" sizes="114x114" href="/market/images/ico/apple-touch-icon-114-precomposed.png">
 	<link rel="apple-touch-icon-precomposed" sizes="72x72" href="/market/images/ico/apple-touch-icon-72-precomposed.png">

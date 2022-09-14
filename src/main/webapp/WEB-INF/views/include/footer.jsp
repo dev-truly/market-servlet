@@ -155,7 +155,7 @@
 <div class="footer-bottom">
   <div class="container">
     <div class="row">
-      Shared by <i class="fa fa-love"></i><a href="https://bootstrapthemes.co">BootstrapThemes</a></span></p>
+      <p style="text-align: center;">Copyright 2022. (PnJoying) all rights reserved.</p>
     </div>
   </div>
 </div>
